@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { LogOut, Bell, Users, UserCheck, MessageCircle, Settings, MapPin, Trash2 } from "lucide-react";
+import { LogOut, Bell, Users, UserCheck, MessageCircle, Settings, MapPin, Trash2, Menu, X } from "lucide-react";
 import { supabase } from '@/lib/supabase';
 
 export default function AdminDashboard() {
   const [adminRole, setAdminRole] = useState("");
   const [adminUsername, setAdminUsername] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   const [pendingArtisans, setPendingArtisans] = useState<any[]>([]);
   const [approvedArtisans, setApprovedArtisans] = useState<any[]>([]);
@@ -121,7 +122,10 @@ export default function AdminDashboard() {
     return () => { channel.unsubscribe(); };
   }, [adminUsername]);
 
-  const openChat = (target: any) => setSelectedChat(target);
+  const openChat = (target: any) => {
+    setSelectedChat(target);
+    setIsMobileSidebarOpen(false);
+  };
 
   const sendMessage = async () => {
     if (!selectedChat || !chatInput.trim() || !adminUsername) return;
@@ -138,22 +142,30 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#0F172A] text-white flex flex-col">
       {/* Top Header */}
-      <div className="bg-[#1E2937] border-b border-white/10 py-4">
-        <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold">Welcome back, <span className="text-[#14B8A6]">{adminUsername}</span></h1>
-            <p className="text-[#14B8A6] text-sm capitalize">{adminRole} Dashboard</p>
+      <div className="bg-[#1E2937] border-b border-white/10 py-4 px-4 sm:px-8">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsMobileSidebarOpen(true)}
+              className="md:hidden p-2 text-white"
+            >
+              <Menu size={28} />
+            </button>
+            <div>
+              <h1 className="text-2xl font-semibold">Welcome back, <span className="text-[#14B8A6]">{adminUsername}</span></h1>
+              <p className="text-[#14B8A6] text-sm capitalize">{adminRole} Dashboard</p>
+            </div>
           </div>
           <button onClick={handleLogout} className="flex items-center gap-2 text-red-400 hover:text-red-500 font-medium">
             <LogOut className="w-5 h-5" />
-            Logout
+            <span className="hidden sm:inline">Logout</span>
           </button>
         </div>
       </div>
 
       <div className="flex flex-1">
-        {/* Sidebar */}
-        <div className="w-72 bg-[#1E2937] p-6 flex flex-col border-r border-white/10">
+        {/* Desktop Sidebar */}
+        <div className="hidden md:flex w-72 bg-[#1E2937] p-6 flex-col border-r border-white/10">
           <div className="flex items-center gap-3 mb-10">
             <div className="w-10 h-10 bg-[#14B8A6] rounded-2xl flex items-center justify-center text-[#0F172A] font-bold text-2xl">A</div>
             <h1 className="text-2xl font-bold">ArtisanConnect</h1>
@@ -180,13 +192,12 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-10 overflow-auto">
-
+        <div className="flex-1 p-4 sm:p-8 md:p-10 overflow-auto">
           {/* OVERVIEW */}
           {activeTab === "overview" && (
             <div>
               <h1 className="text-3xl font-semibold mb-8">Overview Dashboard</h1>
-              <div className="grid grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <div className="bg-[#1E2937] p-8 rounded-3xl">
                   <p className="text-[#14B8A6]">Pending Artisans</p>
                   <p className="text-6xl font-bold mt-2">{pendingArtisans.length}</p>
@@ -221,14 +232,6 @@ export default function AdminDashboard() {
                       <div className="flex-1">
                         <h3 className="text-xl font-semibold">{artisan.name}</h3>
                         <p className="text-[#14B8A6]">{artisan.specialty}</p>
-                        {artisan.verification_type && (
-                          <div className="mt-4">
-                            <p className="text-xs text-[#94A3B8]">Verification: {artisan.verification_type}</p>
-                            {artisan.verification_doc && (
-                              <img src={artisan.verification_doc} alt="Verification" className="mt-2 w-32 h-32 object-cover rounded-2xl cursor-pointer" onClick={() => window.open(artisan.verification_doc, '_blank')} />
-                            )}
-                          </div>
-                        )}
                         <div className="flex gap-3 mt-6">
                           <button onClick={() => approveArtisan(artisan.id)} className="flex-1 bg-green-600 py-3 rounded-2xl">Approve</button>
                           <button onClick={() => revokeArtisan(artisan.id)} className="flex-1 bg-red-600 py-3 rounded-2xl">Revoke</button>
@@ -332,8 +335,6 @@ export default function AdminDashboard() {
           {activeTab === "manage-admin" && isCEO && (
             <div>
               <h1 className="text-3xl font-semibold mb-6">Manage Admin Access (CEO Only)</h1>
-
-              {/* Add New Admin */}
               <div className="bg-[#1E2937] rounded-3xl p-8 mb-8">
                 <h2 className="text-xl font-semibold mb-6">Add New Admin</h2>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -354,7 +355,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* Current Admins */}
               <div className="bg-[#1E2937] rounded-3xl p-8">
                 <h2 className="text-xl font-semibold mb-6">Current Admins</h2>
                 <div className="space-y-4">
@@ -385,6 +385,44 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Mobile Sidebar Drawer */}
+      <AnimatePresence>
+        {isMobileSidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 z-[9999] md:hidden"
+            onClick={() => setIsMobileSidebarOpen(false)}
+          >
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              className="bg-[#1E2937] w-72 h-full p-6 flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-10">
+                <div className="w-10 h-10 bg-[#14B8A6] rounded-2xl flex items-center justify-center text-[#0F172A] font-bold text-2xl">A</div>
+                <h1 className="text-2xl font-bold">ArtisanConnect</h1>
+              </div>
+              <button onClick={() => setIsMobileSidebarOpen(false)} className="absolute top-6 right-6 text-white">
+                <X size={28} />
+              </button>
+              <nav className="flex-1 space-y-1">
+                <button onClick={() => { setActiveTab("overview"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "overview" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}>Overview</button>
+                <button onClick={() => { setActiveTab("users"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "users" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}><Users size={20} /> Registered Users</button>
+                <button onClick={() => { setActiveTab("artisans"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "artisans" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}><UserCheck size={20} /> Artisans</button>
+                <button onClick={() => { setActiveTab("revoked"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "revoked" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}><Trash2 size={20} /> Revoked</button>
+                <button onClick={() => { setActiveTab("complaints"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "complaints" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}>Complaints</button>
+                <button onClick={() => { setActiveTab("admin-chat"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "admin-chat" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}><MessageCircle size={20} /> Admin Chat</button>
+                {isCEO && <button onClick={() => { setActiveTab("manage-admin"); setIsMobileSidebarOpen(false); }} className={`w-full text-left px-5 py-4 rounded-2xl flex items-center gap-3 transition ${activeTab === "manage-admin" ? "bg-[#14B8A6] text-black" : "hover:bg-white/5"}`}><Settings size={20} /> Manage Admins</button>}
+              </nav>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Footer */}
       <footer className="bg-[#0F172A] border-t border-white/10 py-8 mt-auto">

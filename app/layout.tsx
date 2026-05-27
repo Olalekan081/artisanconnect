@@ -21,6 +21,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* IMPORTANT: Viewport meta for mobile responsiveness */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+
         {/* PWA Support */}
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#14B8A6" />
